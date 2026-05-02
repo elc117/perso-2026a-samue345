@@ -7,7 +7,7 @@ import GHC.Generics
 
 
 data Appointment = Appointment { 
-  customer :: String, 
+  customerId :: Int, 
   time :: String,
   machine :: Int
 } deriving (Show, Eq, Generic)

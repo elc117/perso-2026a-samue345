@@ -20,3 +20,32 @@ createAppointment app appointment = do
         appointment
 
       pure $ Right appointment
+
+listAppointments :: App -> Bool -> Int -> IO [Appointment]
+listAppointments app isAdmin customerId =
+  if isAdmin
+    then AppointmentRepository.findAllAppointments (appDb app)
+    else AppointmentRepository.findAppointmentsByCustomerId (appDb app) customerId
+
+
+deleteAppointment :: App -> Bool -> Int -> Int -> IO (Either String ())
+deleteAppointment app isAdmin requesterId appointmentId = do
+  maybeAppointment <-
+    AppointmentRepository.findAppointmentById
+      (appDb app)
+      appointmentId
+
+  case maybeAppointment of
+    Nothing ->
+      pure $ Left "Agendamento não encontrado"
+
+    Just appointment ->
+      if isAdmin || customerId appointment == requesterId
+        then do
+          AppointmentRepository.deleteAppointmentById
+            (appDb app)
+            appointmentId
+
+          pure $ Right ()
+        else
+          pure $ Left "Sem permissão para deletar"

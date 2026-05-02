@@ -10,3 +10,6 @@ routes :: App -> ScottyM ()
 routes app = do
   post "/appointments" $
     createAppointmentHandler app
+  
+  get "/appointments" $
+    listAppointmentsHandler app
