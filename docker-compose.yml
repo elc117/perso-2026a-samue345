@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    container_name: laundry-api
+    ports:
+      - "3000:3000"
+    volumes:
+      - db-data:/app/data
+      - cabal-store:/root/.cabal
+    working_dir: /app
+    command: cabal run laundry-api
+
+volumes:
+  db-data:
+  cabal-store:
