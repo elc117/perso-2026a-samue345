@@ -10,7 +10,7 @@ data Appointment = Appointment {
   customer :: String, 
   time :: String,
   machine :: Int
-} deriving (Show, Generic)
+} deriving (Show, Eq, Generic)
 
 instance ToJSON Appointment
 instance FromJSON Appointment
