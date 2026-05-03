@@ -12,7 +12,7 @@ import Utils.DateTime (formatDbDateTime)
 
 import qualified DTO.CreateAppointmentRequest as CreateReq
 
-import DTO.AppointmentQuery 
+import qualified DTO.AppointmentQuery as Query
 
 insertAppointment :: Connection -> CreateReq.CreateAppointmentRequest -> String -> IO ()
 insertAppointment conn appointment generatedPassword =
@@ -36,7 +36,7 @@ existsAppointmentAtMachineAndScheduledAt conn machineNumber scheduledAt = do
 
   pure $ not (null result)
 
-findAppointments :: Connection -> AppointmentQuery -> IO [Appointment]
+findAppointments :: Connection -> Query.AppointmentQuery -> IO [Appointment]
 findAppointments conn filters =
   query conn
     "SELECT id, customer_id, scheduled_at, machine, password, status \
@@ -44,12 +44,12 @@ findAppointments conn filters =
     \WHERE (? IS NULL OR customer_id = ?) \
     \AND (? IS NULL OR date(scheduled_at) = ?) \
     \AND (? IS NULL OR machine = ?)"
-    ( customerId filters
-    , customerId filters
-    , date filters
-    , date filters
-    , machine filters
-    , machine filters
+    ( Query.customerId filters
+    , Query.customerId filters
+    , Query.date filters
+    , Query.date filters
+    , Query.machine filters
+    , Query.machine filters
     )
 
 findAppointmentById :: Connection -> Int -> IO (Maybe Appointment)

@@ -5,6 +5,7 @@ import qualified Models.Appointment as Appointment
 import qualified Repositories.AppointmentRepository as AppointmentRepository
 import qualified DTO.CreateAppointmentRequest as CreateReq
 import qualified DTO.CreateAppointmentResponse as CreateRes
+import qualified DTO.AppointmentQuery as Query
 
 createAppointment :: App -> CreateReq.CreateAppointmentRequest -> IO (Either String CreateRes.CreateAppointmentResponse)
 createAppointment app appointment = do
@@ -27,11 +28,11 @@ createAppointment app appointment = do
           (CreateReq.scheduledAt appointment)
           generatedPassword
 
-listAppointments :: App -> AppointmentQuery -> IO [Appointment.Appointment]
+listAppointments :: App -> Query.AppointmentQuery -> IO [Appointment.Appointment]
 listAppointments app filters =
-  if isAdmin filters
+  if Query.isAdmin filters
     then AppointmentRepository.findAppointments (appDb app) filters
-    else case customerId filters of
+    else case Query.customerId filters of
       Just _ ->
         AppointmentRepository.findAppointments (appDb app) filters
 

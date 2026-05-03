@@ -9,7 +9,7 @@ import Control.Monad.IO.Class
 import App
 import qualified Service.AppointmentService as AppointmentService
 import DTO.CreateAppointmentRequest
-import DTO.AppointmentQuery
+import qualified DTO.AppointmentQuery as Query
 import qualified DTO.CheckInRequest as CheckInReq
 
 createAppointmentHandler :: App -> ActionM ()
@@ -36,11 +36,11 @@ listAppointmentsHandler app = do
   machine <- queryParamMaybe "machine"
 
   let filters =
-        AppointmentQuery
-          { isAdmin = role == ("admin" :: String)
-          , customerId = customerId
-          , date = date
-          , machine = machine
+        Query.AppointmentQuery
+          { Query.isAdmin = role == ("admin" :: String)
+          , Query.customerId = customerId
+          , Query.date = date
+          , Query.machine = machine
           }
 
   appointments <- liftIO $
@@ -54,7 +54,6 @@ deleteAppointmentHandler app = do
 
   role <- queryParam "role"
   requesterId <- queryParamMaybe "customer_id"
-
 
   let isAdmin = role == ("admin" :: String)
 
