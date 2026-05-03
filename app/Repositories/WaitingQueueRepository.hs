@@ -11,8 +11,8 @@ insertQueue conn queue =
     "INSERT INTO waiting_queue (customer_id, scheduled_at, created_at) VALUES (?, ?, ?)"
     (customerId queue, scheduledAt queue, createdAt queue)
 
-getQueueByScheduledAt :: Connection -> String -> IO [WaitingQueue]
-getQueueByScheduledAt conn appointmentTime =
+getQueueByTime :: Connection -> String -> IO [WaitingQueue]
+getQueueByTime conn appointmentTime =
   query conn
     "SELECT customer_id, scheduled_at, created_at \
     \FROM waiting_queue \
@@ -20,14 +20,14 @@ getQueueByScheduledAt conn appointmentTime =
     \ORDER BY id ASC"
     (Only appointmentTime)
 
-deleteQueueByScheduledAt :: Connection -> String -> IO ()
-deleteQueueByScheduledAt conn appointmentTime =
+deleteQueueByTime :: Connection -> String -> IO ()
+deleteQueueByTime conn appointmentTime =
   execute conn
     "DELETE FROM waiting_queue WHERE scheduled_at = ?"
     (Only appointmentTime)
 
-deleteQueueByCustomerAndScheduledAt :: Connection -> Int -> String -> IO ()
-deleteQueueByCustomerAndScheduledAt conn cid appointmentTime =
+deleteQueueByCustomerAndTime :: Connection -> Int -> String -> IO ()
+deleteQueueByCustomerAndTime conn cid appointmentTime =
   execute conn
     "DELETE FROM waiting_queue WHERE customer_id = ? AND scheduled_at = ?"
     (cid, appointmentTime)

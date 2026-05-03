@@ -67,7 +67,7 @@ checkDelayAndReleaseQueue app = do
       WaitingQueueRepository.deleteQueueByCustomerAndTime
         (appDb app)
         (Queue.customerId queueItem)
-        (Appointment.time appointment)
+        (Appointment.scheduledAt appointment)
 
 findCurrentSlot :: Int -> Maybe TimeRange
 findCurrentSlot currentMinute =
