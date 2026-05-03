@@ -25,7 +25,7 @@ checkDelayAndReleaseQueue app appointmentTime = do
     then pure ()
     else do
       delayedAppointments <-
-        AppointmentRepository.findAppointmentsByTime
+        AppointmentRepository.findScheduledAppointmentsByTime
           (appDb app)
           appointmentTime
 

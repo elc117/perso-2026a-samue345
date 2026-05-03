@@ -6,18 +6,26 @@ import Database.SQLite.Simple
 
 import Models.Appointment
 
-import qualified DTO.CreateAppointmentRequest as CreateAppointmentRequest
+import qualified DTO.CreateAppointmentRequest as CreateReq
 
-insertAppointment :: Connection ->  CreateAppointmentRequest.CreateAppointmentRequest -> IO ()
-insertAppointment conn appointment =
+insertAppointment :: Connection -> CreateReq.CreateAppointmentRequest -> String -> IO ()
+insertAppointment conn appointment generatedPassword =
   execute conn
-    "INSERT INTO appointments (customer_id, machine, time) VALUES (?, ?, ?)"
-    (CreateAppointmentRequest.customerId appointment, CreateAppointmentRequest.machine appointment, CreateAppointmentRequest.time appointment)
+    "INSERT INTO appointments (customer_id, machine, time, password, status) VALUES (?, ?, ?, ?, ?)"
+    ( CreateReq.customerId appointment
+    , CreateReq.machine appointment
+    , CreateReq.time appointment
+    , generatedPassword
+    , "scheduled" :: String
+    )
 
 existsAppointmentAtMachineAndTime :: Connection -> Int -> String -> IO Bool
 existsAppointmentAtMachineAndTime conn machineNumber appointmentTime = do
   result <- query conn
-    "SELECT id FROM appointments WHERE machine = ? AND time = ? LIMIT 1"
+    "SELECT id FROM appointments \
+    \WHERE machine = ? AND time = ? \
+    \AND status IN ('scheduled', 'checked_in') \
+    \LIMIT 1"
     (machineNumber, appointmentTime) :: IO [Only Int]
 
   pure $ not (null result)
@@ -25,28 +33,30 @@ existsAppointmentAtMachineAndTime conn machineNumber appointmentTime = do
 findAllAppointments :: Connection -> IO [Appointment]
 findAllAppointments conn =
   query_ conn
-    "SELECT id, customer_id, time, machine FROM appointments"
+    "SELECT id, customer_id, time, machine, password, status FROM appointments"
 
 findAppointmentsByCustomer :: Connection -> Int -> IO [Appointment]
 findAppointmentsByCustomer conn customerId =
   query conn
-    "SELECT id, customer_id, time, machine FROM appointments WHERE customer_id = ?"
+    "SELECT id, customer_id, time, machine, password, status FROM appointments WHERE customer_id = ?"
     (Only customerId)
 
 findAppointmentById :: Connection -> Int -> IO (Maybe Appointment)
 findAppointmentById conn appointmentId = do
   result <- query conn
-    "SELECT id, customer_id, time, machine FROM appointments WHERE id = ?"
+    "SELECT id, customer_id, time, machine, password, status FROM appointments WHERE id = ?"
     (Only appointmentId)
 
   pure $ case result of
     [a] -> Just a
     _   -> Nothing
 
-findAppointmentsByTime :: Connection -> String -> IO [Appointment]
-findAppointmentsByTime conn appointmentTime =
+findScheduledAppointmentsByTime :: Connection -> String -> IO [Appointment]
+findScheduledAppointmentsByTime conn appointmentTime =
   query conn
-    "SELECT id, customer_id, time, machine FROM appointments WHERE time = ?"
+    "SELECT id, customer_id, time, machine, password, status \
+    \FROM appointments \
+    \WHERE time = ? AND status = 'scheduled'"
     (Only appointmentTime)
 
 deleteAppointmentById :: Connection -> Int -> IO ()
@@ -60,3 +70,9 @@ updateAppointmentCustomer conn appointmentId newCustomerId =
   execute conn
     "UPDATE appointments SET customer_id = ? WHERE id = ?"
     (newCustomerId, appointmentId)
+
+updateAppointmentStatus :: Connection -> Int -> String -> IO ()
+updateAppointmentStatus conn appointmentId newStatus =
+  execute conn
+    "UPDATE appointments SET status = ? WHERE id = ?"
+    (newStatus, appointmentId)

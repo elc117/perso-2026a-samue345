@@ -4,8 +4,9 @@ import App
 import qualified Models.Appointment as Appointment
 import qualified Repositories.AppointmentRepository as AppointmentRepository
 import qualified DTO.CreateAppointmentRequest as CreateReq
+import qualified DTO.CreateAppointmentResponse as CreateRes
 
-createAppointment :: App -> CreateReq.CreateAppointmentRequest -> IO (Either String CreateReq.CreateAppointmentRequest)
+createAppointment :: App -> CreateReq.CreateAppointmentRequest -> IO (Either String CreateRes.CreateAppointmentResponse)
 createAppointment app appointment = do
   alreadyExists <-
     AppointmentRepository.existsAppointmentAtMachineAndTime
@@ -16,8 +17,15 @@ createAppointment app appointment = do
   if alreadyExists
     then pure $ Left "Essa máquina já está ocupada nesse horário."
     else do
-      AppointmentRepository.insertAppointment (appDb app) appointment
-      pure $ Right appointment
+      let generatedPassword = "1234"
+
+      AppointmentRepository.insertAppointment (appDb app) appointment generatedPassword
+
+      pure $ Right $
+        CreateRes.CreateAppointmentResponse
+          (CreateReq.machine appointment)
+          (CreateReq.time appointment)
+          generatedPassword
 
 listAppointments :: App -> Bool -> Maybe Int -> IO [Appointment.Appointment]
 listAppointments app isAdmin customerId =
@@ -51,3 +59,25 @@ deleteAppointment app isAdmin appointmentId requesterId = do
           pure $ Right ()
         else
           pure $ Left "Sem permissão para deletar"
+
+updateAppointmentStatus :: App -> Int -> String -> String -> IO (Either String ())
+updateAppointmentStatus app appointmentId inputPassword newStatus = do
+  appointment <-
+    AppointmentRepository.findAppointmentById
+      (appDb app)
+      appointmentId
+
+  case appointment of
+    Nothing ->
+      pure $ Left "Agendamento não encontrado"
+
+    Just appointment ->
+      if Appointment.password appointment /= inputPassword
+        then pure $ Left "Senha inválida"
+        else do
+          AppointmentRepository.updateAppointmentStatus
+            (appDb app)
+            appointmentId
+            newStatus
+
+          pure $ Right ()

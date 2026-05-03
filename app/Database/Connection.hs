@@ -11,7 +11,12 @@ createTables :: Connection -> IO ()
 createTables conn = do
   execute_ conn
     "CREATE TABLE IF NOT EXISTS appointments \
-    \(id INTEGER PRIMARY KEY AUTOINCREMENT, customer_id INTEGER NOT NULL, machine INTEGER, time TEXT)"
+    \(id INTEGER PRIMARY KEY AUTOINCREMENT, \
+    \ customer_id INTEGER NOT NULL, \
+    \ machine INTEGER, \
+    \ time TEXT, \
+    \ password TEXT NOT NULL, \ 
+    \ status TEXT NOT NULL)"
 
   execute_ conn
     "CREATE TABLE IF NOT EXISTS waiting_queue \

@@ -13,3 +13,12 @@ routes app = do
   
   get "/appointments" $
     listAppointmentsHandler app
+
+  delete "/appointments/:id" $
+    deleteAppointmentHandler app
+
+  post "/appointments/:id/check-in" $
+    checkInAppointmentHandler app
+
+  post "/appointments/:id/finish" $
+    finishAppointmentHandler app

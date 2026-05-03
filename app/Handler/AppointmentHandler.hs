@@ -3,14 +3,13 @@
 module Handler.AppointmentHandler where
 
 import Web.Scotty
-import Network.HTTP.Types.Status
+import qualified Network.HTTP.Types.Status as HTTP
 import Control.Monad.IO.Class
 
 import App
-import Models.Appointment
 import qualified Service.AppointmentService as AppointmentService
 import DTO.CreateAppointmentRequest
-
+import qualified DTO.CheckInRequest as CheckInReq
 
 createAppointmentHandler :: App -> ActionM ()
 createAppointmentHandler app = do
@@ -21,11 +20,11 @@ createAppointmentHandler app = do
 
   case result of
     Left message -> do
-      status status409
+      status HTTP.status409
       json message
 
     Right createdAppointment -> do
-      status status201
+      status HTTP.status201
       json createdAppointment
 
 listAppointmentsHandler :: App -> ActionM ()
@@ -55,8 +54,47 @@ deleteAppointmentHandler app = do
 
   case result of
     Left err -> do
-      status status403
+      status HTTP.status403
       json err
 
     Right _ -> do
-      status status204
+      status HTTP.status204
+
+checkInAppointmentHandler :: App -> ActionM ()
+checkInAppointmentHandler app = do
+  appointmentId <- captureParam "id"
+  req <- jsonData :: ActionM CheckInReq.CheckInRequest
+
+  result <- liftIO $
+    AppointmentService.updateAppointmentStatus
+      app
+      appointmentId
+      (CheckInReq.password req)
+      "checked_in"
+
+  handleStatusResult result
+
+finishAppointmentHandler :: App -> ActionM ()
+finishAppointmentHandler app = do
+  appointmentId <- captureParam "id"
+  req <- jsonData :: ActionM CheckInReq.CheckInRequest
+
+  result <- liftIO $
+    AppointmentService.updateAppointmentStatus
+      app
+      appointmentId
+      (CheckInReq.password req)
+      "finished"
+
+  handleStatusResult result
+
+
+handleStatusResult :: Either String () -> ActionM ()
+handleStatusResult result =
+  case result of
+    Left err -> do
+      status HTTP.status400
+      json err
+
+    Right _ ->
+     status HTTP.status204
