@@ -8,7 +8,6 @@ import Database.SQLite.Simple
 
 data WaitingQueue = WaitingQueue
   { customerId :: Int
-  , machine :: Int
   , time :: String
   , createdAt :: String
   }
@@ -18,4 +17,4 @@ instance ToJSON WaitingQueue
 instance FromJSON WaitingQueue
 
 instance FromRow WaitingQueue where
-  fromRow = WaitingQueue <$> field <*> field <*> field <*> field
+  fromRow = WaitingQueue <$> field <*> field <*> field

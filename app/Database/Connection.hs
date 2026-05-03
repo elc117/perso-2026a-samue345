@@ -17,6 +17,5 @@ createTables conn = do
     "CREATE TABLE IF NOT EXISTS waiting_queue \
     \(id INTEGER PRIMARY KEY AUTOINCREMENT, \
     \ customer_id INTEGER NOT NULL, \
-    \ machine INTEGER NOT NULL, \
     \ time TEXT NOT NULL, \
     \ created_at TEXT NOT NULL)"
