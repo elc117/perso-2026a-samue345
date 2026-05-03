@@ -144,3 +144,61 @@ spec = do
       result <- AppointmentService.deleteAppointment app False 999 (Just 1)
 
       result `shouldBe` Left "Agendamento não encontrado"
+  describe "AppointmentService updateAppointmentStatus" $ do
+  it "faz check-in quando a senha está correta" $ do
+    conn <- open ":memory:"
+    createTables conn
+
+    let app = App { appDb = conn }
+
+    AppointmentRepository.insertAppointment conn
+      CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
+      "1234"
+
+    result <- AppointmentService.updateAppointmentStatus app 1 "1234" "checked_in"
+
+    result `shouldBe` Right ()
+
+    Just appointment <- AppointmentRepository.findAppointmentById conn 1
+    status appointment `shouldBe` "checked_in"
+
+  it "finaliza agendamento quando a senha está correta" $ do
+    conn <- open ":memory:"
+    createTables conn
+
+    let app = App { appDb = conn }
+
+    AppointmentRepository.insertAppointment conn
+      CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
+      "1234"
+
+    result <- AppointmentService.updateAppointmentStatus app 1 "1234" "finished"
+
+    result `shouldBe` Right ()
+
+    Just appointment <- AppointmentRepository.findAppointmentById conn 1
+    status appointment `shouldBe` "finished"
+
+  it "não atualiza status quando a senha está errada" $ do
+    conn <- open ":memory:"
+    createTables conn
+
+    let app = App { appDb = conn }
+
+    AppointmentRepository.insertAppointment conn
+      CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
+      "1234"
+
+    result <- AppointmentService.updateAppointmentStatus app 1 "9999" "checked_in"
+
+    result `shouldBe` Left "Senha inválida"
+
+  it "retorna erro quando agendamento não existe" $ do
+    conn <- open ":memory:"
+    createTables conn
+
+    let app = App { appDb = conn }
+
+    result <- AppointmentService.updateAppointmentStatus app 999 "1234" "checked_in"
+
+    result `shouldBe` Left "Agendamento não encontrado"
