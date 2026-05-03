@@ -37,7 +37,10 @@ joinQueue app queue =
 checkDelayAndReleaseQueue :: App -> IO ()
 checkDelayAndReleaseQueue app = do
   now <- getZonedTime
+  checkDelayAndReleaseQueueAt app now
 
+checkDelayAndReleaseQueueAt :: App -> ZonedTime -> IO ()
+checkDelayAndReleaseQueueAt app now = do
   let currentMinute = minutesFromTimeOfDay $
         localTimeOfDay (zonedTimeToLocalTime now)
 
