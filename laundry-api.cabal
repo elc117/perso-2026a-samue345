@@ -18,6 +18,7 @@ executable laundry-api
     , aeson
     , sqlite-simple
     , http-types
+    , time
 
 test-suite laundry-api-test
   type: exitcode-stdio-1.0
@@ -37,3 +38,4 @@ test-suite laundry-api-test
     , aeson
     , text
     , http-types
+    , time

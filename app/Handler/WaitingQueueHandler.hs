@@ -22,12 +22,10 @@ joinQueueHandler app = do
 checkDelayHandler :: App -> ActionM ()
 checkDelayHandler app = do
   appointmentTime <- queryParam "time"
-  currentMinute <- queryParam "current_minute"
 
   promoted <- liftIO $
     WaitingQueueService.checkDelayAndReleaseQueue
       app
       appointmentTime
-      currentMinute
-
+      
   json promoted

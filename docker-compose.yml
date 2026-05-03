@@ -9,6 +9,8 @@ services:
       - cabal-store:/root/.cabal
     working_dir: /app
     command: cabal run laundry-api
+    environment:
+      - TZ=America/Sao_Paulo
 
 volumes:
   db-data:

@@ -7,14 +7,19 @@ import qualified Repositories.AppointmentRepository as AppointmentRepository
 
 import qualified Models.WaitingQueue as Queue
 import qualified Models.Appointment as Appointment
+import Data.Time
+
 
 joinQueue :: App -> Queue.WaitingQueue -> IO ()
 joinQueue app queue =
   WaitingQueueRepository.insertQueue (appDb app) queue
 
-checkDelayAndReleaseQueue :: App -> String -> Int -> IO ()
-checkDelayAndReleaseQueue app appointmentTime currentMinute = do
-  let scheduledMinute = timeToMinutes appointmentTime
+checkDelayAndReleaseQueue :: App -> String -> IO ()
+checkDelayAndReleaseQueue app appointmentTime = do
+  now <- getZonedTime
+
+  let currentMinute = minutesFromTime (Right now)
+      scheduledMinute = minutesFromTime (Left appointmentTime)
 
   if currentMinute < scheduledMinute + 8
     then pure ()
@@ -45,8 +50,22 @@ checkDelayAndReleaseQueue app appointmentTime currentMinute = do
         (Queue.customerId queueItem)
         appointmentTime
         
-timeToMinutes :: String -> Int
-timeToMinutes value =
+minutesFromTime :: Either String ZonedTime -> Int
+minutesFromTime input =
+  case input of
+    Left value ->
+      toMinutes (stringToTimeOfDay value)
+
+    Right zonedTime ->
+      toMinutes (localTimeOfDay (zonedTimeToLocalTime zonedTime))
+
+
+toMinutes :: TimeOfDay -> Int
+toMinutes t =
+  todHour t * 60 + todMin t
+
+stringToTimeOfDay :: String -> TimeOfDay
+stringToTimeOfDay value =
   let hour = read (take 2 value) :: Int
       minute = read (drop 3 value) :: Int
-   in hour * 60 + minute
+   in TimeOfDay hour minute 0
