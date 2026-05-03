@@ -27,13 +27,13 @@ createAppointment app appointment = do
           (CreateReq.scheduledAt appointment)
           generatedPassword
 
-listAppointments :: App -> Bool -> Maybe Int -> IO [Appointment.Appointment]
-listAppointments app isAdmin customerId =
-  if isAdmin
-    then AppointmentRepository.findAllAppointments (appDb app)
-    else case customerId of
-      Just cid ->
-        AppointmentRepository.findAppointmentsByCustomer (appDb app) cid
+listAppointments :: App -> AppointmentQuery -> IO [Appointment.Appointment]
+listAppointments app filters =
+  if isAdmin filters
+    then AppointmentRepository.findAppointments (appDb app) filters
+    else case customerId filters of
+      Just _ ->
+        AppointmentRepository.findAppointments (appDb app) filters
 
       Nothing ->
         pure []

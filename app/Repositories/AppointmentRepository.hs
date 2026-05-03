@@ -34,16 +34,21 @@ existsAppointmentAtMachineAndScheduledAt conn machineNumber scheduledAt = do
 
   pure $ not (null result)
 
-findAllAppointments :: Connection -> IO [Appointment]
-findAllAppointments conn =
-  query_ conn
-    "SELECT id, customer_id, scheduled_at, machine, password, status FROM appointments"
-
-findAppointmentsByCustomer :: Connection -> Int -> IO [Appointment]
-findAppointmentsByCustomer conn customerId =
+findAppointments :: Connection -> AppointmentQuery -> IO [Appointment]
+findAppointments conn filters =
   query conn
-    "SELECT id, customer_id, scheduled_at, machine, password, status FROM appointments WHERE customer_id = ?"
-    (Only customerId)
+    "SELECT id, customer_id, scheduled_at, machine, password, status \
+    \FROM appointments \
+    \WHERE (? IS NULL OR customer_id = ?) \
+    \AND (? IS NULL OR date(scheduled_at) = ?) \
+    \AND (? IS NULL OR machine = ?)"
+    ( customerId filters
+    , customerId filters
+    , date filters
+    , date filters
+    , machine filters
+    , machine filters
+    )
 
 findAppointmentById :: Connection -> Int -> IO (Maybe Appointment)
 findAppointmentById conn appointmentId = do

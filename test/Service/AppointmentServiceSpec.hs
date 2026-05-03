@@ -144,61 +144,121 @@ spec = do
       result <- AppointmentService.deleteAppointment app False 999 (Just 1)
 
       result `shouldBe` Left "Agendamento não encontrado"
-  describe "AppointmentService updateAppointmentStatus" $ do
-  it "faz check-in quando a senha está correta" $ do
-    conn <- open ":memory:"
-    createTables conn
 
-    let app = App { appDb = conn }
+    it "admin filtra agendamentos por data" $ do
+      conn <- open ":memory:"
+      createTables conn
 
-    AppointmentRepository.insertAppointment conn
-      CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
-      "1234"
+      let app = App { appDb = conn }
 
-    result <- AppointmentService.updateAppointmentStatus app 1 "1234" "checked_in"
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 3 10, machine = 1 }
+        "1234"
 
-    result `shouldBe` Right ()
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 2, scheduledAt = scheduled 4 10, machine = 2 }
+        "1234"
 
-    Just appointment <- AppointmentRepository.findAppointmentById conn 1
-    status appointment `shouldBe` "checked_in"
+      let filters =
+            AppointmentQuery
+              { isAdmin = True
+              , customerId = Nothing
+              , date = Just "2026-05-03"
+              , machine = Nothing
+              }
 
-  it "finaliza agendamento quando a senha está correta" $ do
-    conn <- open ":memory:"
-    createTables conn
+      result <- AppointmentService.listAppointments app filters
 
-    let app = App { appDb = conn }
+      length result `shouldBe` 1
+      customerId (head result) `shouldBe` 1
+    
+    it "admin filtra agendamentos por cliente, data e máquina" $ do
+      conn <- open ":memory:"
+      createTables conn
 
-    AppointmentRepository.insertAppointment conn
-      CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
-      "1234"
+      let app = App { appDb = conn }
 
-    result <- AppointmentService.updateAppointmentStatus app 1 "1234" "finished"
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 3 10, machine = 1 }
+        "1234"
 
-    result `shouldBe` Right ()
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 3 11, machine = 2 }
+        "1234"
 
-    Just appointment <- AppointmentRepository.findAppointmentById conn 1
-    status appointment `shouldBe` "finished"
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 2, scheduledAt = scheduled 3 10, machine = 1 }
+        "1234"
 
-  it "não atualiza status quando a senha está errada" $ do
-    conn <- open ":memory:"
-    createTables conn
+      let filters =
+            AppointmentQuery
+              { isAdmin = True
+              , customerId = Just 1
+              , date = Just "2026-05-03"
+              , machine = Just 2
+              }
 
-    let app = App { appDb = conn }
+      result <- AppointmentService.listAppointments app filters
 
-    AppointmentRepository.insertAppointment conn
-      CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
-      "1234"
+      length result `shouldBe` 1
+      customerId (head result) `shouldBe` 1
+      machine (head result) `shouldBe` 2
 
-    result <- AppointmentService.updateAppointmentStatus app 1 "9999" "checked_in"
+ describe "AppointmentService updateAppointmentStatus" $ do
+    it "faz check-in quando a senha está correta" $ do
+      conn <- open ":memory:"
+      createTables conn
 
-    result `shouldBe` Left "Senha inválida"
+      let app = App { appDb = conn }
 
-  it "retorna erro quando agendamento não existe" $ do
-    conn <- open ":memory:"
-    createTables conn
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
+        "1234"
 
-    let app = App { appDb = conn }
+      result <- AppointmentService.updateAppointmentStatus app 1 "1234" "checked_in"
 
-    result <- AppointmentService.updateAppointmentStatus app 999 "1234" "checked_in"
+      result `shouldBe` Right ()
 
-    result `shouldBe` Left "Agendamento não encontrado"
+      Just appointment <- AppointmentRepository.findAppointmentById conn 1
+      status appointment `shouldBe` "checked_in"
+
+    it "finaliza agendamento quando a senha está correta" $ do
+      conn <- open ":memory:"
+      createTables conn
+
+      let app = App { appDb = conn }
+
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
+        "1234"
+
+      result <- AppointmentService.updateAppointmentStatus app 1 "1234" "finished"
+
+      result `shouldBe` Right ()
+
+      Just appointment <- AppointmentRepository.findAppointmentById conn 1
+      status appointment `shouldBe` "finished"
+
+    it "não atualiza status quando a senha está errada" $ do
+      conn <- open ":memory:"
+      createTables conn
+
+      let app = App { appDb = conn }
+
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
+        "1234"
+
+      result <- AppointmentService.updateAppointmentStatus app 1 "9999" "checked_in"
+
+      result `shouldBe` Left "Senha inválida"
+
+    it "retorna erro quando agendamento não existe" $ do
+      conn <- open ":memory:"
+      createTables conn
+
+      let app = App { appDb = conn }
+
+      result <- AppointmentService.updateAppointmentStatus app 999 "1234" "checked_in"
+
+      result `shouldBe` Left "Agendamento não encontrado"
