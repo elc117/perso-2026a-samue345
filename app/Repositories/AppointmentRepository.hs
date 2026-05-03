@@ -12,6 +12,8 @@ import Utils.DateTime (formatDbDateTime)
 
 import qualified DTO.CreateAppointmentRequest as CreateReq
 
+import DTO.AppointmentQuery 
+
 insertAppointment :: Connection -> CreateReq.CreateAppointmentRequest -> String -> IO ()
 insertAppointment conn appointment generatedPassword =
   execute conn
