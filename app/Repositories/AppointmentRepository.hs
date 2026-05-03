@@ -6,11 +6,13 @@ import Database.SQLite.Simple
 
 import Models.Appointment
 
-insertAppointment :: Connection -> Appointment -> IO ()
+import qualified DTO.CreateAppointmentRequest as CreateAppointmentRequest
+
+insertAppointment :: Connection ->  CreateAppointmentRequest.CreateAppointmentRequest -> IO ()
 insertAppointment conn appointment =
   execute conn
     "INSERT INTO appointments (customer_id, machine, time) VALUES (?, ?, ?)"
-    (customerId appointment, machine appointment, time appointment)
+    (CreateAppointmentRequest.customerId appointment, CreateAppointmentRequest.machine appointment, CreateAppointmentRequest.time appointment)
 
 existsAppointmentAtMachineAndTime :: Connection -> Int -> String -> IO Bool
 existsAppointmentAtMachineAndTime conn machineNumber appointmentTime = do
@@ -23,20 +25,38 @@ existsAppointmentAtMachineAndTime conn machineNumber appointmentTime = do
 findAllAppointments :: Connection -> IO [Appointment]
 findAllAppointments conn =
   query_ conn
-    "SELECT customer_id, time, machine FROM appointments"
+    "SELECT id, customer_id, time, machine FROM appointments"
 
 findAppointmentsByCustomer :: Connection -> Int -> IO [Appointment]
 findAppointmentsByCustomer conn customerId =
   query conn
-    "SELECT customer_id, time, machine FROM appointments WHERE customer_id = ?"
+    "SELECT id, customer_id, time, machine FROM appointments WHERE customer_id = ?"
     (Only customerId)
 
 findAppointmentById :: Connection -> Int -> IO (Maybe Appointment)
 findAppointmentById conn appointmentId = do
   result <- query conn
-    "SELECT customer_id, time, machine FROM appointments WHERE id = ?"
+    "SELECT id, customer_id, time, machine FROM appointments WHERE id = ?"
     (Only appointmentId)
 
   pure $ case result of
     [a] -> Just a
     _   -> Nothing
+
+findAppointmentsByTime :: Connection -> String -> IO [Appointment]
+findAppointmentsByTime conn appointmentTime =
+  query conn
+    "SELECT id, customer_id, time, machine FROM appointments WHERE time = ?"
+    (Only appointmentTime)
+
+deleteAppointmentById :: Connection -> Int -> IO ()
+deleteAppointmentById conn appointmentId =
+  execute conn
+    "DELETE FROM appointments WHERE id = ?"
+    (Only appointmentId)
+
+updateAppointmentCustomer :: Connection -> Int -> Int -> IO ()
+updateAppointmentCustomer conn appointmentId newCustomerId =
+  execute conn
+    "UPDATE appointments SET customer_id = ? WHERE id = ?"
+    (newCustomerId, appointmentId)

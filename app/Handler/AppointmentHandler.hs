@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Handler.AppointmentHandler where
 
 import Web.Scotty
@@ -7,10 +9,12 @@ import Control.Monad.IO.Class
 import App
 import Models.Appointment
 import qualified Service.AppointmentService as AppointmentService
+import DTO.CreateAppointmentRequest
+
 
 createAppointmentHandler :: App -> ActionM ()
 createAppointmentHandler app = do
-  appointment <- jsonData :: ActionM Appointment
+  appointment <- jsonData :: ActionM CreateAppointmentRequest
 
   result <- liftIO $
     AppointmentService.createAppointment app appointment
@@ -26,10 +30,10 @@ createAppointmentHandler app = do
 
 listAppointmentsHandler :: App -> ActionM ()
 listAppointmentsHandler app = do
-  role <- rescue (Just <$> queryParam "role") (\_ -> pure Nothing)
-  customerId <- queryParam "customer_id"
+  role <- queryParam "role"
+  customerId <- queryParamMaybe "customer_id"
 
-  let isAdmin = role == Just ("admin" :: String)
+  let isAdmin = role == ("admin" :: String)
 
   appointments <- liftIO $
     AppointmentService.listAppointments app isAdmin customerId
@@ -38,15 +42,16 @@ listAppointmentsHandler app = do
 
 deleteAppointmentHandler :: App -> ActionM ()
 deleteAppointmentHandler app = do
-  appointmentId <- param "id"
+  appointmentId <- captureParam "id"
 
-  role <- rescue (Just <$> queryParam "role") (\_ -> pure Nothing)
-  requesterId <- queryParam "customer_id"
+  role <- queryParam "role"
+  requesterId <- queryParamMaybe "customer_id"
 
-  let isAdmin = role == Just ("admin" :: String)
+
+  let isAdmin = role == ("admin" :: String)
 
   result <- liftIO $
-    AppointmentService.deleteAppointment app isAdmin requesterId appointmentId
+    AppointmentService.deleteAppointment app isAdmin appointmentId requesterId
 
   case result of
     Left err -> do

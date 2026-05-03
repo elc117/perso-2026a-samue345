@@ -8,7 +8,15 @@ openConnection :: IO Connection
 openConnection = open "data/laundry.sqlite3"
 
 createTables :: Connection -> IO ()
-createTables conn =
+createTables conn = do
   execute_ conn
     "CREATE TABLE IF NOT EXISTS appointments \
     \(id INTEGER PRIMARY KEY AUTOINCREMENT, customer_id INTEGER NOT NULL, machine INTEGER, time TEXT)"
+
+  execute_ conn
+    "CREATE TABLE IF NOT EXISTS waiting_queue \
+    \(id INTEGER PRIMARY KEY AUTOINCREMENT, \
+    \ customer_id INTEGER NOT NULL, \
+    \ machine INTEGER NOT NULL, \
+    \ time TEXT NOT NULL, \
+    \ created_at TEXT NOT NULL)"
