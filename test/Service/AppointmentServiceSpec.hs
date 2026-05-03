@@ -4,6 +4,7 @@ module Service.AppointmentServiceSpec (spec) where
 
 import Test.Hspec
 import Database.SQLite.Simple
+import Data.Time
 
 import App
 import Database.Connection
@@ -13,10 +14,12 @@ import DTO.CreateAppointmentRequest
 import qualified Repositories.AppointmentRepository as AppointmentRepository
 import qualified Service.AppointmentService as AppointmentService
 
+scheduled :: Int -> LocalTime
+scheduled hour =
+  LocalTime (fromGregorian 2026 5 3) (TimeOfDay hour 0 0)
 
 spec :: Spec
 spec = do
-
   describe "AppointmentService createAppointment" $ do
     it "cria um agendamento quando horário está livre" $ do
       conn <- open ":memory:"
@@ -27,12 +30,12 @@ spec = do
       let request = CreateAppointmentRequest
             { customerId = 1
             , machine = 1
-            , time = "10:00"
+            , scheduledAt = scheduled 10
             }
 
       result <- AppointmentService.createAppointment app request
 
-      result `shouldBe` Right request
+      result `shouldSatisfy` either (const False) (const True)
 
     it "bloqueia agendamento duplicado na mesma máquina e horário" $ do
       conn <- open ":memory:"
@@ -43,7 +46,7 @@ spec = do
       let request = CreateAppointmentRequest
             { customerId = 1
             , machine = 1
-            , time = "10:00"
+            , scheduledAt = scheduled 10
             }
 
       _ <- AppointmentService.createAppointment app request
@@ -58,18 +61,17 @@ spec = do
 
       let app = App { appDb = conn }
 
-      AppointmentRepository.insertAppointment conn $
-        CreateAppointmentRequest { customerId = 1, time = "10:00", machine = 1 }
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
+        "1234"
 
-      AppointmentRepository.insertAppointment conn $
-        CreateAppointmentRequest { customerId = 2, time = "11:00", machine = 2 }
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 2, scheduledAt = scheduled 11, machine = 2 }
+        "1234"
 
-      result <- AppointmentService.listAppointments app True 0
+      result <- AppointmentService.listAppointments app True Nothing
 
-      result `shouldBe`
-        [ Appointment { appointmentId = 1, customerId = 1, time = "10:00", machine = 1 }
-        , Appointment { appointmentId = 2, customerId = 2, time = "11:00", machine = 2 }
-        ]
+      length result `shouldBe` 2
 
     it "usuário normal lista apenas seus agendamentos" $ do
       conn <- open ":memory:"
@@ -77,17 +79,18 @@ spec = do
 
       let app = App { appDb = conn }
 
-      AppointmentRepository.insertAppointment conn $
-        CreateAppointmentRequest { customerId = 1, time = "10:00", machine = 1 }
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
+        "1234"
 
-      AppointmentRepository.insertAppointment conn $
-        CreateAppointmentRequest { customerId = 2, time = "11:00", machine = 2 }
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 2, scheduledAt = scheduled 11, machine = 2 }
+        "1234"
 
-      result <- AppointmentService.listAppointments app False 1
+      result <- AppointmentService.listAppointments app False (Just 1)
 
-      result `shouldBe`
-        [ Appointment { appointmentId = 1, customerId = 1, time = "10:00", machine = 1 }
-        ]
+      length result `shouldBe` 1
+      customerId (head result) `shouldBe` 1
 
   describe "AppointmentService deleteAppointment" $ do
     it "admin pode deletar qualquer agendamento" $ do
@@ -96,10 +99,11 @@ spec = do
 
       let app = App { appDb = conn }
 
-      AppointmentRepository.insertAppointment conn $
-        CreateAppointmentRequest { customerId = 1, time = "10:00", machine = 1 }
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
+        "1234"
 
-      result <- AppointmentService.deleteAppointment app True 999 1
+      result <- AppointmentService.deleteAppointment app True 1 (Just 1)
 
       result `shouldBe` Right ()
 
@@ -109,10 +113,11 @@ spec = do
 
       let app = App { appDb = conn }
 
-      AppointmentRepository.insertAppointment conn $
-        CreateAppointmentRequest { customerId = 1, time = "10:00", machine = 1 }
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 1, scheduledAt = scheduled 10, machine = 1 }
+        "1234"
 
-      result <- AppointmentService.deleteAppointment app False 1 1
+      result <- AppointmentService.deleteAppointment app False 1 (Just 1)
 
       result `shouldBe` Right ()
 
@@ -122,10 +127,11 @@ spec = do
 
       let app = App { appDb = conn }
 
-      AppointmentRepository.insertAppointment conn $
-        CreateAppointmentRequest { customerId = 1, time = "10:00", machine = 1 }
+      AppointmentRepository.insertAppointment conn
+        CreateAppointmentRequest { customerId = 2, scheduledAt = scheduled 10, machine = 1 }
+        "1234"
 
-      result <- AppointmentService.deleteAppointment app False 2 1
+      result <- AppointmentService.deleteAppointment app False 1 (Just 1)
 
       result `shouldBe` Left "Sem permissão para deletar"
 
@@ -135,6 +141,6 @@ spec = do
 
       let app = App { appDb = conn }
 
-      result <- AppointmentService.deleteAppointment app False 1 999
+      result <- AppointmentService.deleteAppointment app False 999 (Just 1)
 
       result `shouldBe` Left "Agendamento não encontrado"

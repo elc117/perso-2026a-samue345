@@ -3,12 +3,14 @@ module Service.WaitingQueueService where
 import App
 import Data.List (find)
 import Data.Time
+import Data.Time.Format
 
 import qualified Models.WaitingQueue as Queue
 import qualified Models.Appointment as Appointment
 
 import qualified Repositories.WaitingQueueRepository as WaitingQueueRepository
 import qualified Repositories.AppointmentRepository as AppointmentRepository
+import Utils.DateTime (minutesFromTimeOfDay, stringToTimeOfDay)
 
 type TimeRange = (String, String)
 
@@ -36,22 +38,28 @@ checkDelayAndReleaseQueue :: App -> IO ()
 checkDelayAndReleaseQueue app = do
   now <- getZonedTime
 
-  let currentMinute = minutesFromTime (Right now)
+  let currentMinute = minutesFromTimeOfDay $
+        localTimeOfDay (zonedTimeToLocalTime now)
+
+      today =
+        localDay (zonedTimeToLocalTime now)
 
   case findCurrentSlot currentMinute of
     Nothing ->
       pure ()
 
     Just (startTime, _) -> do
+      let scheduledAt = buildScheduledAt today startTime
+
       delayedAppointments <-
-        AppointmentRepository.findScheduledAppointmentsByTime
+        AppointmentRepository.findScheduledAppointmentsByScheduledAt
           (appDb app)
-          startTime
+          scheduledAt
 
       queue <-
-        WaitingQueueRepository.getQueueByTime
+        WaitingQueueRepository.getQueueByScheduledAt
           (appDb app)
-          startTime
+          scheduledAt
 
       let replacements = zip delayedAppointments queue
 
@@ -64,36 +72,24 @@ checkDelayAndReleaseQueue app = do
         (Appointment.appointmentId appointment)
         (Queue.customerId queueItem)
 
-      WaitingQueueRepository.deleteQueueByCustomerAndTime
+      WaitingQueueRepository.deleteQueueByCustomerAndScheduledAt
         (appDb app)
         (Queue.customerId queueItem)
         (Appointment.scheduledAt appointment)
+
+buildScheduledAt :: Day -> String -> String
+buildScheduledAt day timeValue =
+  formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" localTime
+  where
+    localTime =
+      LocalTime day (stringToTimeOfDay timeValue)
 
 findCurrentSlot :: Int -> Maybe TimeRange
 findCurrentSlot currentMinute =
   find isInside appointmentSlots
   where
     isInside (startTime, endTime) =
-      let start = minutesFromTime (Left startTime)
-          end = minutesFromTime (Left endTime)
+      let start = minutesFromTimeOfDay (stringToTimeOfDay startTime)
+          end = minutesFromTimeOfDay (stringToTimeOfDay endTime)
           releaseAfter = start + delayToleranceMinutes
        in currentMinute >= releaseAfter && currentMinute < end
-
-minutesFromTime :: Either String ZonedTime -> Int
-minutesFromTime input =
-  case input of
-    Left value ->
-      toMinutes (stringToTimeOfDay value)
-
-    Right zonedTime ->
-      toMinutes (localTimeOfDay (zonedTimeToLocalTime zonedTime))
-
-toMinutes :: TimeOfDay -> Int
-toMinutes t =
-  todHour t * 60 + todMin t
-
-stringToTimeOfDay :: String -> TimeOfDay
-stringToTimeOfDay value =
-  let hour = read (take 2 value) :: Int
-      minute = read (drop 3 value) :: Int
-   in TimeOfDay hour minute 0

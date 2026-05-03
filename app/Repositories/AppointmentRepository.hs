@@ -6,6 +6,10 @@ import Database.SQLite.Simple
 
 import Models.Appointment
 
+import Data.Time (LocalTime)
+
+import Utils.DateTime (formatDbDateTime)
+
 import qualified DTO.CreateAppointmentRequest as CreateReq
 
 insertAppointment :: Connection -> CreateReq.CreateAppointmentRequest -> String -> IO ()
@@ -14,19 +18,19 @@ insertAppointment conn appointment generatedPassword =
     "INSERT INTO appointments (customer_id, machine, scheduledAt, password, status) VALUES (?, ?, ?, ?, ?)"
     ( CreateReq.customerId appointment
     , CreateReq.machine appointment
-    , CreateReq.scheduledAt appointment
+    , formatDbDateTime (CreateReq.scheduledAt appointment)
     , generatedPassword
     , "scheduled" :: String
     )
 
-existsAppointmentAtMachineAndTime :: Connection -> Int -> String -> IO Bool
-existsAppointmentAtMachineAndTime conn machineNumber appointmentTime = do
+existsAppointmentAtMachineAndScheduledAt :: Connection -> Int -> LocalTime -> IO Bool
+existsAppointmentAtMachineAndScheduledAt conn machineNumber scheduledAt = do
   result <- query conn
     "SELECT id FROM appointments \
     \WHERE machine = ? AND scheduled_at = ? \
     \AND status IN ('scheduled', 'checked_in') \
     \LIMIT 1"
-    (machineNumber, appointmentTime) :: IO [Only Int]
+    (machineNumber,  formatDbDateTime scheduledAt) :: IO [Only Int]
 
   pure $ not (null result)
 
@@ -51,13 +55,13 @@ findAppointmentById conn appointmentId = do
     [a] -> Just a
     _   -> Nothing
 
-findScheduledAppointmentsByTime :: Connection -> String -> IO [Appointment]
-findScheduledAppointmentsByTime conn appointmentTime =
+findScheduledAppointmentsByScheduledAt :: Connection -> String -> IO [Appointment]
+findScheduledAppointmentsByScheduledAt conn scheduledAt =
   query conn
     "SELECT id, customer_id, scheduled_at, machine, password, status \
     \FROM appointments \
     \WHERE scheduled_at = ? AND status = 'scheduled'"
-    (Only appointmentTime)
+    (Only scheduledAt)
 
 deleteAppointmentById :: Connection -> Int -> IO ()
 deleteAppointmentById conn appointmentId =

@@ -32,29 +32,35 @@ spec =
       it "retorna 201 ao criar agendamento" $ do
         request methodPost "/appointments"
           [("Content-Type", "application/json")]
-          "{\"customerId\":1,\"machine\":1,\"time\":\"10:00\"}"
+          "{\"customerId\":1,\"machine\":1,\"scheduledAt\":\"2026-05-03 10:00:00\"}"
           `shouldRespondWith` 201
+
+      it "retorna 400 quando scheduledAt está em formato inválido" $ do
+        request methodPost "/appointments"
+          [("Content-Type", "application/json")]
+          "{\"customerId\":1,\"machine\":1,\"scheduledAt\":\"10:00\"}"
+          `shouldRespondWith` 400
 
       it "retorna 409 quando horário já está ocupado" $ do
         request methodPost "/appointments"
           [("Content-Type", "application/json")]
-          "{\"customerId\":1,\"machine\":2,\"time\":\"11:00\"}"
+          "{\"customerId\":1,\"machine\":2,\"scheduledAt\":\"2026-05-03 11:00:00\"}"
           `shouldRespondWith` 201
 
         request methodPost "/appointments"
           [("Content-Type", "application/json")]
-          "{\"customerId\":2,\"machine\":2,\"time\":\"11:00\"}"
+          "{\"customerId\":2,\"machine\":2,\"scheduledAt\":\"2026-05-03 11:00:00\"}"
           `shouldRespondWith` 409
 
       it "admin lista todos os agendamentos" $ do
         request methodPost "/appointments"
           [("Content-Type", "application/json")]
-          "{\"customerId\":1,\"machine\":1,\"time\":\"12:00\"}"
+          "{\"customerId\":1,\"machine\":1,\"scheduledAt\":\"2026-05-03 12:00:00\"}"
           `shouldRespondWith` 201
 
         request methodPost "/appointments"
           [("Content-Type", "application/json")]
-          "{\"customerId\":2,\"machine\":2,\"time\":\"13:00\"}"
+          "{\"customerId\":2,\"machine\":2,\"scheduledAt\":\"2026-05-03 13:00:00\"}"
           `shouldRespondWith` 201
 
         request methodGet "/appointments?role=admin&customer_id=0"
@@ -65,7 +71,7 @@ spec =
       it "usuário normal lista seus agendamentos" $ do
         request methodPost "/appointments"
           [("Content-Type", "application/json")]
-          "{\"customerId\":3,\"machine\":1,\"time\":\"14:00\"}"
+          "{\"customerId\":3,\"machine\":1,\"scheduledAt\":\"2026-05-03 14:00:00\"}"
           `shouldRespondWith` 201
 
         request methodGet "/appointments?customer_id=3"

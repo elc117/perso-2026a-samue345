@@ -9,7 +9,7 @@ import qualified DTO.CreateAppointmentResponse as CreateRes
 createAppointment :: App -> CreateReq.CreateAppointmentRequest -> IO (Either String CreateRes.CreateAppointmentResponse)
 createAppointment app appointment = do
   alreadyExists <-
-    AppointmentRepository.existsAppointmentAtMachineAndTime
+    AppointmentRepository.existsAppointmentAtMachineAndScheduledAt
       (appDb app)
       (CreateReq.machine appointment)
       (CreateReq.scheduledAt appointment)

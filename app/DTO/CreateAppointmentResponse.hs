@@ -3,12 +3,13 @@
 module DTO.CreateAppointmentResponse where
 
 import Data.Aeson
+import Data.Time
 import GHC.Generics
 
 data CreateAppointmentResponse = CreateAppointmentResponse
   { 
     machine :: Int
-  , scheduledAt :: String
+  , scheduledAt :: LocalTime
   , password :: String
   }
   deriving (Show, Eq, Generic)
