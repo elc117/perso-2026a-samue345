@@ -11,10 +11,10 @@ import qualified DTO.CreateAppointmentRequest as CreateReq
 insertAppointment :: Connection -> CreateReq.CreateAppointmentRequest -> String -> IO ()
 insertAppointment conn appointment generatedPassword =
   execute conn
-    "INSERT INTO appointments (customer_id, machine, scheduled_at, password, status) VALUES (?, ?, ?, ?, ?)"
+    "INSERT INTO appointments (customer_id, machine, scheduledAt, password, status) VALUES (?, ?, ?, ?, ?)"
     ( CreateReq.customerId appointment
     , CreateReq.machine appointment
-    , CreateReq.scheduled_at appointment
+    , CreateReq.scheduledAt appointment
     , generatedPassword
     , "scheduled" :: String
     )
