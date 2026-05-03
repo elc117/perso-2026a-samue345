@@ -10,13 +10,13 @@ import Database.SQLite.Simple
 data Appointment = Appointment
   { appointmentId :: Int
   , customerId :: Int
-  , time :: String
+  , scheduledAt :: String
   , machine :: Int
   , password :: String
   , status :: String
   }
   deriving (Show, Eq, Generic)
-  
+
 instance ToJSON Appointment
 instance FromJSON Appointment
 

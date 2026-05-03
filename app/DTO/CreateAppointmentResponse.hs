@@ -8,7 +8,7 @@ import GHC.Generics
 data CreateAppointmentResponse = CreateAppointmentResponse
   { 
     machine :: Int
-  , time :: String
+  , scheduledAt :: String
   , password :: String
   }
   deriving (Show, Eq, Generic)

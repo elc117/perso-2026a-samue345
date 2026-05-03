@@ -11,10 +11,10 @@ import qualified DTO.CreateAppointmentRequest as CreateReq
 insertAppointment :: Connection -> CreateReq.CreateAppointmentRequest -> String -> IO ()
 insertAppointment conn appointment generatedPassword =
   execute conn
-    "INSERT INTO appointments (customer_id, machine, time, password, status) VALUES (?, ?, ?, ?, ?)"
+    "INSERT INTO appointments (customer_id, machine, scheduled_at, password, status) VALUES (?, ?, ?, ?, ?)"
     ( CreateReq.customerId appointment
     , CreateReq.machine appointment
-    , CreateReq.time appointment
+    , CreateReq.scheduled_at appointment
     , generatedPassword
     , "scheduled" :: String
     )
@@ -23,7 +23,7 @@ existsAppointmentAtMachineAndTime :: Connection -> Int -> String -> IO Bool
 existsAppointmentAtMachineAndTime conn machineNumber appointmentTime = do
   result <- query conn
     "SELECT id FROM appointments \
-    \WHERE machine = ? AND time = ? \
+    \WHERE machine = ? AND scheduled_at = ? \
     \AND status IN ('scheduled', 'checked_in') \
     \LIMIT 1"
     (machineNumber, appointmentTime) :: IO [Only Int]
@@ -33,18 +33,18 @@ existsAppointmentAtMachineAndTime conn machineNumber appointmentTime = do
 findAllAppointments :: Connection -> IO [Appointment]
 findAllAppointments conn =
   query_ conn
-    "SELECT id, customer_id, time, machine, password, status FROM appointments"
+    "SELECT id, customer_id, scheduled_at, machine, password, status FROM appointments"
 
 findAppointmentsByCustomer :: Connection -> Int -> IO [Appointment]
 findAppointmentsByCustomer conn customerId =
   query conn
-    "SELECT id, customer_id, time, machine, password, status FROM appointments WHERE customer_id = ?"
+    "SELECT id, customer_id, scheduled_at, machine, password, status FROM appointments WHERE customer_id = ?"
     (Only customerId)
 
 findAppointmentById :: Connection -> Int -> IO (Maybe Appointment)
 findAppointmentById conn appointmentId = do
   result <- query conn
-    "SELECT id, customer_id, time, machine, password, status FROM appointments WHERE id = ?"
+    "SELECT id, customer_id, scheduled_at, machine, password, status FROM appointments WHERE id = ?"
     (Only appointmentId)
 
   pure $ case result of
@@ -54,9 +54,9 @@ findAppointmentById conn appointmentId = do
 findScheduledAppointmentsByTime :: Connection -> String -> IO [Appointment]
 findScheduledAppointmentsByTime conn appointmentTime =
   query conn
-    "SELECT id, customer_id, time, machine, password, status \
+    "SELECT id, customer_id, scheduled_at, machine, password, status \
     \FROM appointments \
-    \WHERE time = ? AND status = 'scheduled'"
+    \WHERE scheduled_at = ? AND status = 'scheduled'"
     (Only appointmentTime)
 
 deleteAppointmentById :: Connection -> Int -> IO ()

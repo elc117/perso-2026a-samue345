@@ -8,7 +8,7 @@ import Database.SQLite.Simple
 
 data WaitingQueue = WaitingQueue
   { customerId :: Int
-  , time :: String
+  , scheduledAt :: String
   , createdAt :: String
   }
   deriving (Show, Eq, Generic)

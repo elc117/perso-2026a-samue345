@@ -12,7 +12,7 @@ createAppointment app appointment = do
     AppointmentRepository.existsAppointmentAtMachineAndTime
       (appDb app)
       (CreateReq.machine appointment)
-      (CreateReq.time appointment)
+      (CreateReq.scheduled_at appointment)
 
   if alreadyExists
     then pure $ Left "Essa máquina já está ocupada nesse horário."
@@ -24,7 +24,7 @@ createAppointment app appointment = do
       pure $ Right $
         CreateRes.CreateAppointmentResponse
           (CreateReq.machine appointment)
-          (CreateReq.time appointment)
+          (CreateReq.scheduled_at appointment)
           generatedPassword
 
 listAppointments :: App -> Bool -> Maybe Int -> IO [Appointment.Appointment]
