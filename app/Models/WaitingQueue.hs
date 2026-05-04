@@ -18,3 +18,4 @@ instance FromJSON WaitingQueue
 
 instance FromRow WaitingQueue where
   fromRow = WaitingQueue <$> field <*> field <*> field
+  

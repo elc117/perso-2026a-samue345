@@ -195,3 +195,4 @@ spec = do
 
       customerId tenAppointment `shouldBe` 2
       customerId elevenAppointment `shouldBe` 9
+      

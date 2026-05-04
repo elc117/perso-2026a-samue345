@@ -18,3 +18,4 @@ stringToTimeOfDay value =
   let hour = read (take 2 value) :: Int
       minute = read (drop 3 value) :: Int
    in TimeOfDay hour minute 0
+   

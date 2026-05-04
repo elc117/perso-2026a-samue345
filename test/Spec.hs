@@ -11,3 +11,4 @@ main = hspec $ do
   AppointmentRepositorySpec.spec
   AppointmentServiceSpec.spec
   AppointmentHandlerSpec.spec
+  

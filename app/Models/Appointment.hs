@@ -23,3 +23,4 @@ instance FromJSON Appointment
 instance FromRow Appointment where
   fromRow =
     Appointment <$> field <*> field <*> field <*> field <*> field <*> field
+    

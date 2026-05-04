@@ -10,3 +10,4 @@ routes :: App -> ScottyM ()
 routes app = do
   AppointmentRoutes.routes app
   WaitingQueueRoutes.routes app
+  

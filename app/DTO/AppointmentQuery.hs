@@ -6,3 +6,4 @@ data AppointmentQuery  = AppointmentQuery
   , date       :: Maybe String
   , machine    :: Maybe Int
   } 
+  

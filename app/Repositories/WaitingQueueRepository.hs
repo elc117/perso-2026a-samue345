@@ -31,3 +31,4 @@ deleteQueueByCustomerAndScheduledAt conn cid scheduledAt =
   execute conn
     "DELETE FROM waiting_queue WHERE customer_id = ? AND scheduled_at = ?"
     (cid, scheduledAt)
+    

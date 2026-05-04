@@ -82,3 +82,4 @@ updateAppointmentStatus app appointmentId inputPassword newStatus = do
             newStatus
 
           pure $ Right ()
+          

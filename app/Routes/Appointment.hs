@@ -22,3 +22,4 @@ routes app = do
 
   post "/appointments/:id/finish" $
     finishAppointmentHandler app
+    

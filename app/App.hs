@@ -12,3 +12,4 @@ createApp = do
   conn <- openConnection
   createTables conn
   pure App { appDb = conn }
+  

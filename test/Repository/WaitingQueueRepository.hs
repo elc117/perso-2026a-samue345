@@ -106,3 +106,4 @@ spec = do
       result <- WaitingQueueRepository.getQueueByScheduledAt conn "2026-05-03 10:00:00"
 
       map customerId result `shouldBe` [2]
+      

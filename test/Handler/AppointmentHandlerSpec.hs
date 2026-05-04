@@ -5,7 +5,7 @@ module Handler.AppointmentHandlerSpec (spec) where
 import Test.Hspec
 import Test.Hspec.Wai
 
-import Web.Scotty
+import Web.Scotty hiding (request)
 import Network.Wai (Application)
 import Network.HTTP.Types (methodPost, methodGet)
 
@@ -35,11 +35,11 @@ spec =
           "{\"customerId\":1,\"machine\":1,\"scheduledAt\":\"2026-05-03 10:00:00\"}"
           `shouldRespondWith` 201
 
-      it "retorna 400 quando scheduledAt está em formato inválido" $ do
+      it "retorna 422 quando scheduledAt está em formato inválido" $ do
         request methodPost "/appointments"
           [("Content-Type", "application/json")]
           "{\"customerId\":1,\"machine\":1,\"scheduledAt\":\"10:00\"}"
-          `shouldRespondWith` 400
+          `shouldRespondWith` 422
 
       it "retorna 409 quando horário já está ocupado" $ do
         request methodPost "/appointments"
@@ -74,7 +74,40 @@ spec =
           "{\"customerId\":3,\"machine\":1,\"scheduledAt\":\"2026-05-03 14:00:00\"}"
           `shouldRespondWith` 201
 
-        request methodGet "/appointments?customer_id=3"
+        request methodGet "/appointments?role=customer&customer_id=3"
+          []
+          ""
+          `shouldRespondWith` 200
+
+      it "admin lista com filtro por data" $ do
+        request methodPost "/appointments"
+          [("Content-Type", "application/json")]
+          "{\"customerId\":1,\"machine\":1,\"scheduledAt\":\"2026-05-03 15:00:00\"}"
+          `shouldRespondWith` 201
+
+        request methodGet "/appointments?role=admin&date=2026-05-03"
+          []
+          ""
+          `shouldRespondWith` 200
+
+      it "admin lista com filtro por máquina" $ do
+        request methodPost "/appointments"
+          [("Content-Type", "application/json")]
+          "{\"customerId\":1,\"machine\":2,\"scheduledAt\":\"2026-05-03 16:00:00\"}"
+          `shouldRespondWith` 201
+
+        request methodGet "/appointments?role=admin&machine=2"
+          []
+          ""
+          `shouldRespondWith` 200
+
+      it "admin lista com filtros por data e máquina" $ do
+        request methodPost "/appointments"
+          [("Content-Type", "application/json")]
+          "{\"customerId\":1,\"machine\":1,\"scheduledAt\":\"2026-05-04 10:00:00\"}"
+          `shouldRespondWith` 201
+
+        request methodGet "/appointments?role=admin&date=2026-05-04&machine=1"
           []
           ""
           `shouldRespondWith` 200

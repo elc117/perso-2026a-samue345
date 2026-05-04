@@ -96,3 +96,4 @@ findCurrentSlot currentMinute =
           end = minutesFromTimeOfDay (stringToTimeOfDay endTime)
           releaseAfter = start + delayToleranceMinutes
        in currentMinute >= releaseAfter && currentMinute < end
+       

@@ -25,3 +25,4 @@ checkDelayHandler app = do
   promoted <- liftIO $ WaitingQueueService.checkDelayAndReleaseQueue app
 
   json promoted
+  

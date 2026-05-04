@@ -39,3 +39,4 @@ test-suite laundry-api-test
     , text
     , http-types
     , time
+    
