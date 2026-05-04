@@ -16,15 +16,15 @@ type TimeRange = (String, String)
 
 appointmentSlots :: [TimeRange]
 appointmentSlots =
-  [ ("08:00", "09:00")
-  , ("09:00", "10:00")
-  , ("10:00", "11:00")
-  , ("11:00", "12:00")
-  , ("12:00", "13:00")
-  , ("13:00", "14:00")
-  , ("14:00", "15:00")
-  , ("15:00", "16:00")
-  , ("16:00", "17:00")
+  [ ("08:00", "09:08")
+  , ("09:08", "10:08")
+  , ("10:08", "11:08")
+  , ("11:08", "12:08")
+  , ("12:08", "13:08")
+  , ("13:08", "14:08")
+  , ("14:08", "15:08")
+  , ("15:08", "16:08")
+  , ("16:08", "17:08")
   ]
 
 delayToleranceMinutes :: Int
@@ -96,4 +96,3 @@ findCurrentSlot currentMinute =
           end = minutesFromTimeOfDay (stringToTimeOfDay endTime)
           releaseAfter = start + delayToleranceMinutes
        in currentMinute >= releaseAfter && currentMinute < end
-       
