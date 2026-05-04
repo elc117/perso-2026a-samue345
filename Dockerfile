@@ -18,4 +18,4 @@ RUN cabal build
 
 EXPOSE 8080
 
-CMD ["cabal", "run", "laundry-api"]
+CMD ["cabal", "run",  "mkdir -p data && touch data/laundry.sqlite3 && cabal run laundry-api"]
